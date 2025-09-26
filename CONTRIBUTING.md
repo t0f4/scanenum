@@ -1,6 +1,6 @@
 # Contributing to scanenum
 
-Thanks for considering contributing! 🚀  
+Thanks for considering contributing!  
 This project aims to stay small, clean, and easy to use. Contributions are welcome — from bug fixes to new plugins.
 
 ---
