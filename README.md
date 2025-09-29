@@ -19,7 +19,7 @@ Outputs are written to a per-run folder like `scanenum_<target>_<UTC timestamp>/
 - `lib/api.sh` — small helper "API" for logging, config, plugin discovery.
 - `config/default.conf` — configurable knobs (Nmap flags, wordlists, etc.).
 - `plugins/enabled/*.sh` — executable plugins with a `run()` function. The file name determines order and id.
-  - Example: `20_nmap_scan.sh` → id `20`, name `nmap_scan`.
+  - Plugins Naming Example: `20_nmap_scan.sh` → id `20`, name `nmap_scan`.
 
 ### Plugin contract
 
