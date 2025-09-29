@@ -14,7 +14,7 @@ source "$SCRIPT_DIR/lib/api.sh"
 echo -e "${CYAN}====================================${RESET}"
 echo -e "${YELLOW}tool: scanenum (modular)${RESET}"
 echo -e "${YELLOW}author: t0f4${RESET}"
-echo -e "${YELLOW}contributor: MasterCraft${RESET}"
+echo -e "${YELLOW}contributors: MasterCraft,...${RESET}"
 echo -e "${YELLOW}version: 0.2 (plugin-arch)${RESET}"
 echo -e "${CYAN}====================================${RESET}"
 
