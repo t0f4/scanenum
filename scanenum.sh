@@ -52,7 +52,7 @@ fi
 # ===== Phase 2: Nmap Aggressive Scan =====
 echo -e "${MAGENTA}---[ Phase 2: Port & Service Scan ]---${RESET}"
 skip_phase=false
-nmap -A "$TARGET" -oN "$RESULTS/nmap.txt" &
+nmap -A "$TARGET" -p- -oN "$RESULTS/nmap.txt" &
 CURRENT_PID=$!
 wait $CURRENT_PID 2>/dev/null || true
 CURRENT_PID=0
