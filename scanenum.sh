@@ -52,7 +52,7 @@ fi
 # ===== Phase 2: Nmap Aggressive Scan =====
 echo -e "${MAGENTA}---[ Phase 2: Port & Service Scan ]---${RESET}"
 skip_phase=false
-nmap -A "$TARGET" -p- -oN "$RESULTS/nmap.txt" &
+nmap -A "$TARGET" -T4 -oN "$RESULTS/nmap.txt" &
 CURRENT_PID=$!
 wait $CURRENT_PID 2>/dev/null || true
 CURRENT_PID=0
@@ -60,11 +60,33 @@ CURRENT_PID=0
 
 # Extract web ports (http/https services)
 WEB_PORTS=$(grep -E '^[0-9]+/tcp.*open.*(http|https)' "$RESULTS/nmap.txt" | cut -d/ -f1 | tr '\n' ' ' | sed 's/ $//')
+
+# --- New logic: ensure port 1311 is included as web (HTTP or HTTPS) if it's open ---
+HTTPS_PORTS=""
+if grep -E '^1311/tcp.*open' "$RESULTS/nmap.txt" >/dev/null 2>&1; then
+  # add 1311 to WEB_PORTS if not already present
+  if [ -z "$WEB_PORTS" ] || ! echo "$WEB_PORTS" | grep -w -q '1311'; then
+    WEB_PORTS="$(echo "$WEB_PORTS 1311" | tr -s ' ' | sed 's/^ //; s/ $//')"
+  fi
+  # determine whether 1311 looks like an SSL/HTTPS service in nmap output
+  if grep -Ei '^1311/tcp.*open.*(https|ssl|tls)' "$RESULTS/nmap.txt" >/dev/null 2>&1; then
+    HTTPS_PORTS="$HTTPS_PORTS 1311"
+  fi
+fi
+# trim spaces
+WEB_PORTS="$(echo "$WEB_PORTS" | tr -s ' ' | sed 's/^ //; s/ $//')"
+HTTPS_PORTS="$(echo "$HTTPS_PORTS" | tr -s ' ' | sed 's/^ //; s/ $//')"
+
 if [ -z "$WEB_PORTS" ]; then
   echo -e "${RED}[-] No web ports found, skipping web enumeration${RESET}"
   exit 0
 fi
-echo -e "${GREEN}[+] Web ports discovered: $WEB_PORTS${RESET}\n"
+echo -e "${GREEN}[+] Web ports discovered: $WEB_PORTS${RESET}"
+if [ -n "$HTTPS_PORTS" ]; then
+  echo -e "${GREEN}[+] Ports treated as HTTPS: $HTTPS_PORTS${RESET}\n"
+else
+  echo -e "${YELLOW}[!] No additional HTTPS ports auto-detected (1311 will be HTTP unless Nmap showed SSL/HTTPS)${RESET}\n"
+fi
 
 # ===== Phase 3: Gobuster (no prompt, default wordlist) =====
 # We run gobuster but keep it quiet; cleaned output excludes 403 entries.
@@ -76,7 +98,8 @@ fi
 WORDLIST="/usr/share/wordlists/dirb/common.txt"
 for PORT in $WEB_PORTS; do
   URL="http://$TARGET:$PORT"
-  if [ "$PORT" = "443" ] || [ "$PORT" = "8443" ]; then
+  # Use HTTPS for well-known HTTPS ports or if we auto-detected 1311 as HTTPS
+  if [ "$PORT" = "443" ] || [ "$PORT" = "8443" ] || echo "$HTTPS_PORTS" | grep -w -q "$PORT"; then
     URL="https://$TARGET:$PORT"
   fi
 
@@ -114,7 +137,8 @@ fi
 
 for PORT in $WEB_PORTS; do
   URL="http://$TARGET:$PORT"
-  if [ "$PORT" = "443" ] || [ "$PORT" = "8443" ]; then
+  # Use HTTPS for well-known HTTPS ports or if we auto-detected 1311 as HTTPS
+  if [ "$PORT" = "443" ] || [ "$PORT" = "8443" ] || echo "$HTTPS_PORTS" | grep -w -q "$PORT"; then
     URL="https://$TARGET:$PORT"
   fi
 
@@ -177,4 +201,3 @@ done
 echo -e "\n${GREEN}[*] Done. All outputs: $RESULTS/${RESET}"
 
 # End of script
-
