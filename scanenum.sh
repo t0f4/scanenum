@@ -95,7 +95,9 @@ if ! command -v gobuster &>/dev/null; then
   sudo apt-get update && sudo apt-get install -y gobuster || echo -e "${YELLOW}[!] Could not install gobuster; skipping gobuster phase${RESET}"
 fi
 
-WORDLIST="/usr/share/wordlists/dirb/common.txt"
+# Updated to use extensive Dirbuster medium wordlist
+WORDLIST="/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt"
+
 for PORT in $WEB_PORTS; do
   URL="http://$TARGET:$PORT"
   # Use HTTPS for well-known HTTPS ports or if we auto-detected 1311 as HTTPS
@@ -114,7 +116,6 @@ for PORT in $WEB_PORTS; do
     if [ "$skip_phase" = true ]; then
       echo -e "${YELLOW}[!] Skipped Gobuster on $URL${RESET}\n"
     else
-      # Exclude lines that represent HTTP 403 status explicitly
       grep -v -E 'Status: *403|\(403\)|\b403\b' "$RESULTS/gobuster_$PORT.txt" > "$RESULTS/gobuster_$PORT.clean.tmp" || true
       if [ -s "$RESULTS/gobuster_$PORT.clean.tmp" ]; then
         awk 'NF' "$RESULTS/gobuster_$PORT.clean.tmp" | awk '!seen[$0]++' > "$RESULTS/gobuster_$PORT.clean.txt"
